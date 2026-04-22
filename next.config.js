@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  assetPrefix: "https://timer-vert-ten.vercel.app"
+  outputFileTracingRoot: __dirname,
 };
 
 module.exports = nextConfig;

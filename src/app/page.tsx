@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { ToolLayout } from "./tool-layout";
 import { Button } from "./button";
-import { useI18n } from "./tool-layout";
+import { useI18n } from "../hooks/useI18n";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 
 type DisplayMode = "digital" | "analog";
@@ -382,7 +382,7 @@ function Stopwatch() {
   );
 }
 
-export default function TimerPage() {
+function TimerContent() {
   const { t, language } = useI18n();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [displayMode, setDisplayMode] = useLocalStorage<DisplayMode>("timer-display-mode", "digital");
@@ -394,7 +394,7 @@ export default function TimerPage() {
   }, []);
 
   return (
-    <ToolLayout>
+    <>
       {/* Hero Section */}
       <section className="py-12 md:py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
@@ -539,6 +539,14 @@ export default function TimerPage() {
           </>
         )}
       </section>
+    </>
+  );
+}
+
+export default function TimerPage() {
+  return (
+    <ToolLayout>
+      <TimerContent />
     </ToolLayout>
   );
 }
