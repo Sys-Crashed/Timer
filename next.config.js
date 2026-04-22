@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
-  basePath: "/tools/Timer"
+  output: "standalone"
 };
 
 module.exports = nextConfig;
