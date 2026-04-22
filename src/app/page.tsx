@@ -1,17 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, Clock, Timer, Gauge } from "lucide-react";
+import { Play, Pause, RotateCcw, Clock, Hourglass, Gauge } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { ToolLayout } from "./tool-layout";
 import { Button } from "./button";
 
 type DisplayMode = "digital" | "analog";
+type ToolMode = "clock" | "countdown" | "stopwatch";
 
 const features = [
   { icon: Clock, text: "实时时钟显示" },
-  { icon: Timer, text: "双模式切换" },
+  { icon: Hourglass, text: "倒计时功能" },
   { icon: Gauge, text: "秒表计次" },
 ];
 
@@ -99,15 +100,17 @@ function AnalogClock({ time }: { time: Date }) {
       animate={{ opacity: 1, scale: 1 }}
       className="relative w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-full bg-card border-4 border-border shadow-xl"
     >
-      {[...Array(12)].map((_, i) => (
+      {[...Array(60)].map((_, i) => (
         <div
           key={i}
           className={clsx(
-            "absolute bg-foreground rounded-sm left-1/2 -translate-x-1/2 origin-center",
-            i % 3 === 0 ? "w-1 h-4" : "w-0.5 h-2",
-            "top-3"
+            "absolute bg-foreground left-1/2 -translate-x-1/2 origin-center",
+            i % 5 === 0 ? "w-1 h-3" : "w-0.5 h-2"
           )}
-          style={{ transform: `translateX(-50%) rotate(${i * 30}deg)` }}
+          style={{
+            transform: `translateX(-50%) rotate(${i * 6}deg) translateY(-50%)`,
+            top: "50%"
+          }}
         />
       ))}
 
@@ -130,6 +133,127 @@ function AnalogClock({ time }: { time: Date }) {
       />
 
       <div className="absolute w-3 h-3 bg-red-500 rounded-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+    </motion.div>
+  );
+}
+
+function Countdown() {
+  const [minutes, setMinutes] = useState(5);
+  const [seconds, setSeconds] = useState(0);
+  const [totalSeconds, setTotalSeconds] = useState(5 * 60);
+  const [isRunning, setIsRunning] = useState(false);
+  const [remaining, setRemaining] = useState(5 * 60);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRunning && remaining > 0) {
+      interval = setInterval(() => {
+        setRemaining(prev => {
+          if (prev <= 1) {
+            setIsRunning(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning, remaining]);
+
+  const handleStart = () => {
+    if (remaining > 0) {
+      setIsRunning(true);
+    }
+  };
+
+  const handlePause = () => {
+    setIsRunning(false);
+  };
+
+  const handleReset = () => {
+    setIsRunning(false);
+    setRemaining(totalSeconds);
+  };
+
+  const handleSetTime = () => {
+    setIsRunning(false);
+    const newTotal = minutes * 60 + seconds;
+    setTotalSeconds(newTotal);
+    setRemaining(newTotal);
+  };
+
+  const displayMin = Math.floor(remaining / 60);
+  const displaySec = remaining % 60;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full max-w-md"
+    >
+      <motion.div
+        className={clsx(
+          "font-mono text-5xl md:text-6xl lg:text-7xl font-bold text-center mb-6",
+          remaining === 0 && "text-red-500"
+        )}
+      >
+        {displayMin.toString().padStart(2, "0")}:
+        {displaySec.toString().padStart(2, "0")}
+      </motion.div>
+
+      {!isRunning && remaining === totalSeconds && (
+        <div className="flex gap-2 justify-center mb-4">
+          <input
+            type="number"
+            min="0"
+            max="99"
+            value={minutes}
+            onChange={e => setMinutes(Math.max(0, parseInt(e.target.value) || 0))}
+            className="w-16 px-2 py-1 text-center border border-input rounded-md bg-background"
+          />
+          <span className="self-center text-lg">:</span>
+          <input
+            type="number"
+            min="0"
+            max="59"
+            value={seconds}
+            onChange={e => setSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+            className="w-16 px-2 py-1 text-center border border-input rounded-md bg-background"
+          />
+        </div>
+      )}
+
+      {(remaining !== totalSeconds || isRunning) && (
+        <div className="flex gap-2 justify-center mb-4">
+          <Button
+            variant="secondary"
+            onClick={handleReset}
+            className="min-w-24"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            重置
+          </Button>
+        </div>
+      )}
+
+      <div className="flex gap-3 justify-center">
+        {remaining === 0 ? (
+          <Button variant="default" onClick={handleReset} className="min-w-24">
+            <RotateCcw className="w-4 h-4 mr-2" />
+            重置
+          </Button>
+        ) : isRunning ? (
+          <Button variant="destructive" onClick={handlePause} className="min-w-24">
+            <Pause className="w-4 h-4 mr-2" />
+            暂停
+          </Button>
+        ) : (
+          <Button variant="default" onClick={remaining === totalSeconds ? handleSetTime : handleStart} className="min-w-24">
+            <Play className="w-4 h-4 mr-2" />
+            开始
+          </Button>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -222,7 +346,7 @@ function Stopwatch() {
 export default function TimerPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [displayMode, setDisplayMode] = useState<DisplayMode>("digital");
-  const [showStopwatch, setShowStopwatch] = useState(false);
+  const [toolMode, setToolMode] = useState<ToolMode>("clock");
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -249,7 +373,7 @@ export default function TimerPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-base md:text-lg text-muted-foreground mb-6"
           >
-            实时时钟与秒表功能，随时掌握时间
+          实时时钟、倒计时与秒表功能，随时掌握时间
           </motion.p>
 
           <motion.div
@@ -282,28 +406,45 @@ export default function TimerPage() {
           className="flex gap-2 mb-8 justify-center"
         >
           <Button
-            variant={!showStopwatch ? "default" : "secondary"}
-            onClick={() => setShowStopwatch(false)}
+            variant={toolMode === "clock" ? "default" : "secondary"}
+            onClick={() => setToolMode("clock")}
             className="min-w-20"
           >
             时钟
           </Button>
           <Button
-            variant={showStopwatch ? "default" : "secondary"}
-            onClick={() => setShowStopwatch(true)}
+            variant={toolMode === "countdown" ? "default" : "secondary"}
+            onClick={() => setToolMode("countdown")}
+            className="min-w-20"
+          >
+            倒计时
+          </Button>
+          <Button
+            variant={toolMode === "stopwatch" ? "default" : "secondary"}
+            onClick={() => setToolMode("stopwatch")}
             className="min-w-20"
           >
             秒表
           </Button>
         </motion.div>
 
-        {showStopwatch ? (
+        {toolMode === "stopwatch" ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
+            className="flex justify-center"
           >
-            <Gauge />
+            <Stopwatch />
+          </motion.div>
+        ) : toolMode === "countdown" ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="flex justify-center"
+          >
+            <Countdown />
           </motion.div>
         ) : (
           <>
