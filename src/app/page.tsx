@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, Clock, Hourglass, Gauge } from "lucide-react";
+import { Play, Pause, RotateCcw, Clock, Hourglass, Gauge, Minus, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { ToolLayout } from "./tool-layout";
@@ -124,8 +124,6 @@ function AnalogClock({ time }: { time: Date }) {
 }
 
 function Countdown() {
-  const [minutes, setMinutes] = useState(5);
-  const [seconds, setSeconds] = useState(0);
   const [totalSeconds, setTotalSeconds] = useState(5 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [remaining, setRemaining] = useState(5 * 60);
@@ -161,9 +159,9 @@ function Countdown() {
     setRemaining(totalSeconds);
   };
 
-  const handleSetTime = () => {
-    setIsRunning(false);
-    const newTotal = minutes * 60 + seconds;
+  const adjustTime = (delta: number) => {
+    if (isRunning) return;
+    const newTotal = Math.max(1, totalSeconds + delta);
     setTotalSeconds(newTotal);
     setRemaining(newTotal);
   };
@@ -179,7 +177,7 @@ function Countdown() {
     >
       <motion.div
         className={clsx(
-          "font-mono text-5xl md:text-6xl lg:text-7xl font-bold text-center mb-6",
+          "font-mono text-5xl md:text-6xl lg:text-7xl font-bold text-center mb-8",
           remaining === 0 && "text-red-500"
         )}
       >
@@ -187,54 +185,61 @@ function Countdown() {
         {displaySec.toString().padStart(2, "0")}
       </motion.div>
 
-      {!isRunning && remaining === totalSeconds && (
-        <div className="flex gap-2 justify-center mb-4">
-          <input
-            type="number"
-            min="0"
-            max="99"
-            value={minutes}
-            onChange={e => setMinutes(Math.max(0, parseInt(e.target.value) || 0))}
-            className="w-16 px-2 py-1 text-center border border-input rounded-md bg-background"
-          />
-          <span className="self-center text-lg">:</span>
-          <input
-            type="number"
-            min="0"
-            max="59"
-            value={seconds}
-            onChange={e => setSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-            className="w-16 px-2 py-1 text-center border border-input rounded-md bg-background"
-          />
+      {!isRunning && (
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => adjustTime(-60)}
+            disabled={totalSeconds <= 60}
+          >
+            <Minus className="w-4 h-4" />
+          </Button>
+          <span className="text-lg font-medium w-20 text-center">分</span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => adjustTime(60)}
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
         </div>
       )}
 
-      {(remaining !== totalSeconds || isRunning) && (
-        <div className="flex gap-2 justify-center mb-4">
+      {!isRunning && (
+        <div className="flex items-center justify-center gap-4 mb-8">
           <Button
-            variant="secondary"
-            onClick={handleReset}
-            className="min-w-24"
+            variant="outline"
+            size="icon"
+            onClick={() => adjustTime(-1)}
+            disabled={totalSeconds <= 1}
           >
-            <RotateCcw className="w-4 h-4 mr-2" />
-            重置
+            <Minus className="w-4 h-4" />
+          </Button>
+          <span className="text-lg font-medium w-20 text-center">秒</span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => adjustTime(1)}
+          >
+            <Plus className="w-4 h-4" />
           </Button>
         </div>
       )}
 
       <div className="flex gap-3 justify-center">
         {remaining === 0 ? (
-          <Button variant="default" onClick={handleReset} className="min-w-24">
+          <Button variant="default" onClick={handleReset}>
             <RotateCcw className="w-4 h-4 mr-2" />
             重置
           </Button>
         ) : isRunning ? (
-          <Button variant="destructive" onClick={handlePause} className="min-w-24">
+          <Button variant="destructive" onClick={handlePause}>
             <Pause className="w-4 h-4 mr-2" />
             暂停
           </Button>
         ) : (
-          <Button variant="default" onClick={handleStart} className="min-w-24">
+          <Button variant="default" onClick={handleStart}>
             <Play className="w-4 h-4 mr-2" />
             开始
           </Button>
