@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, Clock, Timer, Stopwatch } from "lucide-react";
+import { Play, Pause, RotateCcw, Clock, Timer, Gauge } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { ToolLayout } from "./tool-layout";
@@ -12,7 +12,7 @@ type DisplayMode = "digital" | "analog";
 const features = [
   { icon: Clock, text: "实时时钟显示" },
   { icon: Timer, text: "双模式切换" },
-  { icon: Stopwatch, text: "秒表计次" },
+  { icon: Gauge, text: "秒表计次" },
 ];
 
 function formatTime(seconds: number): string {
@@ -303,7 +303,7 @@ export default function TimerPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
           >
-            <Stopwatch />
+            <Gauge />
           </motion.div>
         ) : (
           <>
