@@ -3,15 +3,15 @@
 import { useState, useEffect, useRef, createContext, useContext, ReactNode, useCallback } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
-import { ArrowLeft, Moon, Sun, Github, Mail, Youtube, Globe, Monitor } from "lucide-react";
+import { ArrowLeft, Moon, Sun, Github, Mail, Youtube, Globe } from "lucide-react";
 import { Button } from "./button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./dropdown-menu";
+import { cn } from "./utils";
 
 // I18n Context
 type Language = "zh" | "en";
@@ -48,7 +48,7 @@ export function useI18n() {
 }
 
 // Theme Context
-type Theme = "light" | "dark" | "system";
+type Theme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
@@ -62,7 +62,7 @@ export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
     return {
-      theme: "system" as Theme,
+      theme: "dark" as Theme,
       setTheme: () => {},
       resolvedTheme: "dark",
     };
@@ -71,34 +71,20 @@ export function useTheme() {
 }
 
 function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
+  const [theme, setThemeState] = useState<Theme>("dark");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
     const saved = localStorage.getItem("theme") as Theme | null;
-    if (saved === "light" || saved === "dark" || saved === "system") {
+    if (saved === "light" || saved === "dark") {
       setThemeState(saved);
+      setResolvedTheme(saved);
+    } else {
+      // system default
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setResolvedTheme(prefersDark ? "dark" : "light");
     }
   }, []);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-    const updateResolvedTheme = () => {
-      if (theme === "system") {
-        setResolvedTheme(mediaQuery.matches ? "dark" : "light");
-      } else {
-        setResolvedTheme(theme);
-      }
-    };
-
-    updateResolvedTheme();
-
-    const handler = () => updateResolvedTheme();
-    mediaQuery.addEventListener("change", handler);
-
-    return () => mediaQuery.removeEventListener("change", handler);
-  }, [theme]);
 
   useEffect(() => {
     document.documentElement.classList.remove("light", "dark");
@@ -107,6 +93,7 @@ function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
+    setResolvedTheme(newTheme);
     localStorage.setItem("theme", newTheme);
   }, []);
 
@@ -158,7 +145,7 @@ function AnimatedSection({
   className,
   delay = 0,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   delay?: number;
 }) {
@@ -178,30 +165,9 @@ function AnimatedSection({
   );
 }
 
-function HoverScale({
-  children,
-  className,
-  scale = 1.05,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  scale?: number;
-}) {
-  return (
-    <motion.div
-      whileHover={{ scale }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 export function ToolLayout({ children }: ToolLayoutProps) {
   const { language, setLanguage, t } = useI18n();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -213,27 +179,21 @@ export function ToolLayout({ children }: ToolLayoutProps) {
   }, []);
 
   const cycleTheme = () => {
-    if (theme === "light") setTheme("dark");
-    else if (theme === "dark") setTheme("system");
-    else setTheme("light");
-  };
-
-  const getThemeIcon = () => {
-    if (theme === "system") return <Monitor className="h-5 w-5" />;
-    return resolvedTheme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />;
+    setTheme(theme === "light" ? "dark" : "light");
   };
 
   return (
     <I18nProvider>
       <ThemeProvider>
         <div className="min-h-screen bg-background text-foreground flex flex-col">
-          {/* Header */}
+          {/* Header - Same style as main site */}
           <header
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+            className={cn(
+              "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
               isScrolled
                 ? "bg-background/80 backdrop-blur-md shadow-sm"
                 : "bg-transparent"
-            }`}
+            )}
           >
             <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
               {/* Back Link */}
@@ -259,69 +219,78 @@ export function ToolLayout({ children }: ToolLayoutProps) {
                 </Link>
               </div>
 
-          {/* Controls */}
-          <div className="flex items-center gap-2">
-            {/* Language Toggle */}
-            <Select value={language} onValueChange={(v) => setLanguage(v as "zh" | "en")}>
-              <SelectTrigger className="w-[80px] h-9">
-                <Globe className="w-4 h-4 mr-1" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="zh">中文</SelectItem>
-                <SelectItem value="en">EN</SelectItem>
-              </SelectContent>
-            </Select>
+              {/* Controls - Same style as main site */}
+              <div className="flex items-center gap-2">
+                {/* Language Switcher - Dropdown style like main site */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                      <Globe className="h-5 w-5" />
+                      <span className="sr-only">Toggle language</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => setLanguage("zh")}
+                      className={cn(language === "zh" && "bg-accent")}
+                    >
+                      中文
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setLanguage("en")}
+                      className={cn(language === "en" && "bg-accent")}
+                    >
+                      English
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-            {/* Theme Toggle */}
-            <HoverScale>
-              <Button variant="ghost" size="icon" onClick={cycleTheme}>
-                <motion.div
-                  key={theme}
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
+                {/* Theme Toggle - Sun/Moon icons with rotation animation like main site */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={cycleTheme}
                 >
-                  {getThemeIcon()}
-                </motion.div>
-              </Button>
-            </HoverScale>
-          </div>
-        </nav>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 pt-16">
-        {children}
-      </main>
-
-      {/* Footer */}
-      <footer className="py-8 px-4 border-t border-border/50">
-        <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <AnimatedSection>
-              <p className="text-sm text-muted-foreground">
-                {language === "zh" ? "由 SysCrashed 构建" : "Built by SysCrashed"}
-              </p>
-            </AnimatedSection>
-            <AnimatedSection delay={0.1}>
-              <div className="flex items-center gap-4">
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <link.icon className="w-5 h-5" />
-                  </a>
-                ))}
+                  <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  <span className="sr-only">Toggle theme</span>
+                </Button>
               </div>
-            </AnimatedSection>
-          </div>
-        </div>
-      </footer>
+            </nav>
+          </header>
+
+          {/* Main Content */}
+          <main className="flex-1 pt-16">
+            {children}
+          </main>
+
+          {/* Footer */}
+          <footer className="py-8 px-4 border-t border-border/50">
+            <div className="container mx-auto">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <AnimatedSection>
+                  <p className="text-sm text-muted-foreground">
+                    {language === "zh" ? "由 SysCrashed 构建" : "Built by SysCrashed"}
+                  </p>
+                </AnimatedSection>
+                <AnimatedSection delay={0.1}>
+                  <div className="flex items-center gap-4">
+                    {socialLinks.map((link) => (
+                      <a
+                        key={link.name}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <link.icon className="w-5 h-5" />
+                      </a>
+                    ))}
+                  </div>
+                </AnimatedSection>
+              </div>
+            </div>
+          </footer>
         </div>
       </ThemeProvider>
     </I18nProvider>
