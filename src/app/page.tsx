@@ -181,7 +181,7 @@ function Countdown() {
         disabled={isRunning || (delta < 0 && totalSeconds <= Math.abs(delta))}
         className="w-12 h-12"
       >
-        <Plus className="w-4 h-4 rotate-45" />
+        <Plus className="w-5 h-5" />
       </Button>
       <span className="text-2xl font-mono font-bold w-14 text-center">
         {value.toString().padStart(2, "0")}
@@ -227,6 +227,12 @@ function Countdown() {
       )}
 
       <div className="flex gap-3 justify-center">
+        {!isInitial && !isRunning && remaining > 0 && (
+          <Button variant="secondary" onClick={handleReset}>
+            <RotateCcw className="w-4 h-4 mr-2" />
+            重置
+          </Button>
+        )}
         {remaining === 0 ? (
           <Button variant="default" onClick={handleReset}>
             <RotateCcw className="w-4 h-4 mr-2" />
