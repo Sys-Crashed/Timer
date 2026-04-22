@@ -170,6 +170,8 @@ function Countdown() {
   const displayMin = Math.floor((remaining % 3600) / 60);
   const displaySec = remaining % 60;
 
+  const isInitial = !isRunning && remaining === totalSeconds;
+
   const TimeAdjuster = ({ value, label, delta }: { value: number; label: string; delta: number }) => (
     <div className="flex flex-col items-center gap-1">
       <Button
@@ -203,18 +205,7 @@ function Countdown() {
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-md"
     >
-      <motion.div
-        className={clsx(
-          "font-mono text-5xl md:text-6xl lg:text-7xl font-bold text-center mb-8",
-          remaining === 0 && "text-red-500"
-        )}
-      >
-        {displayHour.toString().padStart(2, "0")}:
-        {displayMin.toString().padStart(2, "0")}:
-        {displaySec.toString().padStart(2, "0")}
-      </motion.div>
-
-      {!isRunning && (
+      {isInitial ? (
         <div className="flex items-center justify-center gap-6 mb-8">
           <TimeAdjuster value={displayHour} label="时" delta={3600} />
           <span className="text-3xl font-bold mt-8">:</span>
@@ -222,6 +213,17 @@ function Countdown() {
           <span className="text-3xl font-bold mt-8">:</span>
           <TimeAdjuster value={displaySec} label="秒" delta={1} />
         </div>
+      ) : (
+        <motion.div
+          className={clsx(
+            "font-mono text-5xl md:text-6xl lg:text-7xl font-bold text-center mb-8",
+            remaining === 0 && "text-red-500"
+          )}
+        >
+          {displayHour.toString().padStart(2, "0")}:
+          {displayMin.toString().padStart(2, "0")}:
+          {displaySec.toString().padStart(2, "0")}
+        </motion.div>
       )}
 
       <div className="flex gap-3 justify-center">
