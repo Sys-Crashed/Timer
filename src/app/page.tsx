@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, Clock, Hourglass, Gauge, Minus, Plus } from "lucide-react";
+import { Play, Pause, RotateCcw, Clock, Hourglass, Gauge, Minus, Plus, Bell } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { ToolLayout } from "./tool-layout";
@@ -127,6 +127,20 @@ function Countdown() {
   const [totalSeconds, setTotalSeconds] = useState(5 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [remaining, setRemaining] = useState(5 * 60);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
+
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestNotificationPermission = async () => {
+    if ("Notification" in window && Notification.permission === "default") {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+    }
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -135,6 +149,12 @@ function Countdown() {
         setRemaining(prev => {
           if (prev <= 1) {
             setIsRunning(false);
+            if (notificationPermission === "granted") {
+              new Notification("倒计时结束", {
+                body: "计时器已完成！",
+                icon: "/favicon.ico"
+              });
+            }
             return 0;
           }
           return prev - 1;
@@ -142,7 +162,7 @@ function Countdown() {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [isRunning, notificationPermission]);
 
   const handleStart = () => {
     if (remaining > 0) {
@@ -226,7 +246,12 @@ function Countdown() {
         </motion.div>
       )}
 
-      <div className="flex gap-3 justify-center">
+      <div className="flex gap-3 justify-center items-center">
+        {notificationPermission !== "granted" && (
+          <Button variant="outline" size="sm" onClick={requestNotificationPermission}>
+            开启通知
+          </Button>
+        )}
         {!isInitial && !isRunning && remaining > 0 && (
           <Button variant="secondary" onClick={handleReset}>
             <RotateCcw className="w-4 h-4 mr-2" />
