@@ -166,8 +166,36 @@ function Countdown() {
     setRemaining(newTotal);
   };
 
-  const displayMin = Math.floor(remaining / 60);
+  const displayHour = Math.floor(remaining / 3600);
+  const displayMin = Math.floor((remaining % 3600) / 60);
   const displaySec = remaining % 60;
+
+  const TimeAdjuster = ({ value, label, delta }: { value: number; label: string; delta: number }) => (
+    <div className="flex flex-col items-center gap-1">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => adjustTime(delta)}
+        disabled={isRunning || (delta < 0 && totalSeconds <= Math.abs(delta))}
+        className="w-12 h-12"
+      >
+        <Plus className="w-4 h-4 rotate-45" />
+      </Button>
+      <span className="text-2xl font-mono font-bold w-14 text-center">
+        {value.toString().padStart(2, "0")}
+      </span>
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => adjustTime(-delta)}
+        disabled={isRunning || (delta < 0 && totalSeconds <= Math.abs(delta))}
+        className="w-12 h-12"
+      >
+        <Minus className="w-4 h-4" />
+      </Button>
+    </div>
+  );
 
   return (
     <motion.div
@@ -181,49 +209,18 @@ function Countdown() {
           remaining === 0 && "text-red-500"
         )}
       >
+        {displayHour.toString().padStart(2, "0")}:
         {displayMin.toString().padStart(2, "0")}:
         {displaySec.toString().padStart(2, "0")}
       </motion.div>
 
       {!isRunning && (
-        <div className="flex items-center justify-center gap-4 mb-6">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => adjustTime(-60)}
-            disabled={totalSeconds <= 60}
-          >
-            <Minus className="w-4 h-4" />
-          </Button>
-          <span className="text-lg font-medium w-20 text-center">分</span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => adjustTime(60)}
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-      )}
-
-      {!isRunning && (
-        <div className="flex items-center justify-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => adjustTime(-1)}
-            disabled={totalSeconds <= 1}
-          >
-            <Minus className="w-4 h-4" />
-          </Button>
-          <span className="text-lg font-medium w-20 text-center">秒</span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => adjustTime(1)}
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
+        <div className="flex items-center justify-center gap-6 mb-8">
+          <TimeAdjuster value={displayHour} label="时" delta={3600} />
+          <span className="text-3xl font-bold mt-8">:</span>
+          <TimeAdjuster value={displayMin} label="分" delta={60} />
+          <span className="text-3xl font-bold mt-8">:</span>
+          <TimeAdjuster value={displaySec} label="秒" delta={1} />
         </div>
       )}
 
