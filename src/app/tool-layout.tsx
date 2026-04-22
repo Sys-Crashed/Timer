@@ -92,13 +92,8 @@ export function ToolLayout({ children }: ToolLayoutProps) {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
             ? "bg-background/80 backdrop-blur-md shadow-sm"
-            : "bg-background"
+            : "bg-transparent"
         }`}
-        style={{ 
-          transform: "translateZ(0)",
-          backfaceVisibility: "hidden",
-          willChange: "opacity"
-        }}
       >
         <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
           {/* Back Link */}
