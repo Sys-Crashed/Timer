@@ -100,20 +100,6 @@ function AnalogClock({ time }: { time: Date }) {
       animate={{ opacity: 1, scale: 1 }}
       className="relative w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-full bg-card border-4 border-border shadow-xl"
     >
-      {[...Array(60)].map((_, i) => (
-        <div
-          key={i}
-          className={clsx(
-            "absolute bg-foreground left-1/2 -translate-x-1/2 origin-center",
-            i % 5 === 0 ? "w-1 h-3" : "w-0.5 h-2"
-          )}
-          style={{
-            transform: `translateX(-50%) rotate(${i * 6}deg) translateY(-50%)`,
-            top: "50%"
-          }}
-        />
-      ))}
-
       <motion.div
         className="absolute w-2 h-20 bg-foreground rounded-sm left-1/2 bottom-1/2 -translate-x-1/2 origin-bottom"
         animate={{ rotate: hourDeg }}
@@ -146,7 +132,7 @@ function Countdown() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isRunning && remaining > 0) {
+    if (isRunning) {
       interval = setInterval(() => {
         setRemaining(prev => {
           if (prev <= 1) {
@@ -158,7 +144,7 @@ function Countdown() {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning, remaining]);
+  }, [isRunning]);
 
   const handleStart = () => {
     if (remaining > 0) {
