@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "编码解码工具",
-  description: "支持 Base64、URL、Unicode、HTML 等多种编码解码",
+  title: "计时器工具",
+  description: "支持倒计时和秒表功能",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
