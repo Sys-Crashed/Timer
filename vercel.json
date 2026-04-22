@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/tools/Timer/(.*)",
+      "destination": "/$1"
+    }
+  ]
+}
