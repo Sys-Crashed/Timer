@@ -352,7 +352,7 @@ function Stopwatch() {
         </Button>
         {isRunning && (
           <Button variant="outline" onClick={handleLap}>
-            计次
+            {t("timer.stopwatch.lap")}
           </Button>
         )}
       </div>
@@ -363,7 +363,7 @@ function Stopwatch() {
           animate={{ opacity: 1, height: "auto" }}
           className="bg-card rounded-xl p-4 border border-border max-h-48 overflow-auto"
         >
-          <div className="font-medium mb-3">计次记录</div>
+          <div className="font-medium mb-3">{t("timer.stopwatch.lapRecord")}</div>
           {laps.map((lap, i) => (
             <motion.div
               key={i}
@@ -372,7 +372,7 @@ function Stopwatch() {
               transition={{ delay: i * 0.05 }}
               className="flex justify-between py-2 border-b border-border last:border-0"
             >
-              <span>第 {i + 1} 次</span>
+              <span>{t("timer.stopwatch.lapNumber").replace("{n}", String(i + 1))}</span>
               <span className="font-mono">{formatTime(lap)}</span>
             </motion.div>
           ))}

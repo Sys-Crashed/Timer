@@ -35,6 +35,14 @@ const translations: Record<Language, Record<string, string>> = {
     "timer.notification.title": "倒计时结束",
     "timer.notification.body": "计时器已完成！",
     "timer.today": "今天是",
+    // Stopwatch
+    "timer.stopwatch.lap": "计次",
+    "timer.stopwatch.lapRecord": "计次记录",
+    "timer.stopwatch.lapNumber": "第 {n} 次",
+    // Countdown
+    "timer.countdown.hour": "小时",
+    "timer.countdown.minute": "分钟",
+    "timer.countdown.second": "秒",
   },
   en: {
     // Common
@@ -60,6 +68,14 @@ const translations: Record<Language, Record<string, string>> = {
     "timer.notification.title": "Countdown Complete",
     "timer.notification.body": "Timer finished!",
     "timer.today": "Today is",
+    // Stopwatch
+    "timer.stopwatch.lap": "Lap",
+    "timer.stopwatch.lapRecord": "Lap Record",
+    "timer.stopwatch.lapNumber": "Lap {n}",
+    // Countdown
+    "timer.countdown.hour": "Hour",
+    "timer.countdown.minute": "Min",
+    "timer.countdown.second": "Sec",
   },
 };
 
