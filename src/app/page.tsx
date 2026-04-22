@@ -234,7 +234,7 @@ function Countdown() {
             暂停
           </Button>
         ) : (
-          <Button variant="default" onClick={remaining === totalSeconds ? handleSetTime : handleStart} className="min-w-24">
+          <Button variant="default" onClick={handleStart} className="min-w-24">
             <Play className="w-4 h-4 mr-2" />
             开始
           </Button>
