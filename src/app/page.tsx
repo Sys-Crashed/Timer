@@ -1,19 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, Clock, Hourglass, Gauge, Minus, Plus, Bell } from "lucide-react";
+import { Play, Pause, RotateCcw, Clock, Hourglass, Gauge, Minus, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { ToolLayout } from "./tool-layout";
 import { Button } from "./button";
+import { useI18n } from "./tool-layout";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 type DisplayMode = "digital" | "analog";
 type ToolMode = "clock" | "countdown" | "stopwatch";
 
 const features = [
-  { icon: Clock, text: "实时时钟显示" },
-  { icon: Hourglass, text: "倒计时功能" },
-  { icon: Gauge, text: "秒表计次" },
+  { icon: Clock, textKey: "timer.feature.time" },
+  { icon: Hourglass, textKey: "timer.feature.countdown" },
+  { icon: Gauge, textKey: "timer.feature.stopwatch" },
 ];
 
 function formatTime(seconds: number): string {
@@ -37,6 +39,7 @@ function FeatureTag({ icon: Icon, text }: { icon: React.ElementType; text: strin
 }
 
 function DigitalClock({ time }: { time: Date }) {
+  const { t } = useI18n();
   const hours = time.getHours().toString().padStart(2, "0");
   const minutes = time.getMinutes().toString().padStart(2, "0");
   const seconds = time.getSeconds().toString().padStart(2, "0");
@@ -123,10 +126,46 @@ function AnalogClock({ time }: { time: Date }) {
   );
 }
 
+function TimeAdjuster({ value, label, delta, onAdjust, disabled }: { 
+  value: number; 
+  label: string; 
+  delta: number; 
+  onAdjust: (delta: number) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onAdjust(delta)}
+        disabled={disabled}
+        className="w-12 h-12"
+      >
+        <Plus className="w-5 h-5" />
+      </Button>
+      <span className="text-2xl font-mono font-bold w-14 text-center">
+        {value.toString().padStart(2, "0")}
+      </span>
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onAdjust(-delta)}
+        disabled={disabled}
+        className="w-12 h-12"
+      >
+        <Minus className="w-5 h-5" />
+      </Button>
+    </div>
+  );
+}
+
 function Countdown() {
-  const [totalSeconds, setTotalSeconds] = useState(5 * 60);
+  const { t } = useI18n();
+  const [totalSeconds, setTotalSeconds] = useLocalStorage("timer-countdown-total", 5 * 60);
   const [isRunning, setIsRunning] = useState(false);
-  const [remaining, setRemaining] = useState(5 * 60);
+  const [remaining, setRemaining] = useState(totalSeconds);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
 
   useEffect(() => {
@@ -134,6 +173,12 @@ function Countdown() {
       setNotificationPermission(Notification.permission);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isRunning) {
+      setRemaining(totalSeconds);
+    }
+  }, [totalSeconds, isRunning]);
 
   const requestNotificationPermission = async () => {
     if ("Notification" in window && Notification.permission === "default") {
@@ -150,8 +195,8 @@ function Countdown() {
           if (prev <= 1) {
             setIsRunning(false);
             if (notificationPermission === "granted") {
-              new Notification("倒计时结束", {
-                body: "计时器已完成！",
+              new Notification(t("timer.notification.title"), {
+                body: t("timer.notification.body"),
                 icon: "/favicon.ico"
               });
             }
@@ -162,7 +207,7 @@ function Countdown() {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning, notificationPermission]);
+  }, [isRunning, notificationPermission, t]);
 
   const handleStart = () => {
     if (remaining > 0) {
@@ -179,11 +224,10 @@ function Countdown() {
     setRemaining(totalSeconds);
   };
 
-  const adjustTime = (delta: number) => {
+  const handleAdjust = (delta: number) => {
     if (isRunning) return;
     const newTotal = Math.max(1, totalSeconds + delta);
     setTotalSeconds(newTotal);
-    setRemaining(newTotal);
   };
 
   const displayHour = Math.floor(remaining / 3600);
@@ -191,33 +235,6 @@ function Countdown() {
   const displaySec = remaining % 60;
 
   const isInitial = !isRunning && remaining === totalSeconds;
-
-  const TimeAdjuster = ({ value, label, delta }: { value: number; label: string; delta: number }) => (
-    <div className="flex flex-col items-center gap-1">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => adjustTime(delta)}
-        disabled={isRunning || (delta < 0 && totalSeconds <= Math.abs(delta))}
-        className="w-12 h-12"
-      >
-        <Plus className="w-5 h-5" />
-      </Button>
-      <span className="text-2xl font-mono font-bold w-14 text-center">
-        {value.toString().padStart(2, "0")}
-      </span>
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => adjustTime(-delta)}
-        disabled={isRunning || (delta < 0 && totalSeconds <= Math.abs(delta))}
-        className="w-12 h-12"
-      >
-        <Minus className="w-4 h-4" />
-      </Button>
-    </div>
-  );
 
   return (
     <motion.div
@@ -227,11 +244,11 @@ function Countdown() {
     >
       {isInitial ? (
         <div className="flex items-center justify-center gap-6 mb-8">
-          <TimeAdjuster value={displayHour} label="时" delta={3600} />
+          <TimeAdjuster value={displayHour} label={t("timer.hour")} delta={3600} onAdjust={handleAdjust} disabled={isRunning} />
           <span className="text-3xl font-bold mt-8">:</span>
-          <TimeAdjuster value={displayMin} label="分" delta={60} />
+          <TimeAdjuster value={displayMin} label={t("timer.minute")} delta={60} onAdjust={handleAdjust} disabled={isRunning} />
           <span className="text-3xl font-bold mt-8">:</span>
-          <TimeAdjuster value={displaySec} label="秒" delta={1} />
+          <TimeAdjuster value={displaySec} label={t("timer.second")} delta={1} onAdjust={handleAdjust} disabled={isRunning} />
         </div>
       ) : (
         <motion.div
@@ -249,29 +266,29 @@ function Countdown() {
       <div className="flex gap-3 justify-center items-center">
         {notificationPermission !== "granted" && (
           <Button variant="outline" size="sm" onClick={requestNotificationPermission}>
-            开启通知
+            {t("common.enable")}
           </Button>
         )}
         {!isInitial && !isRunning && remaining > 0 && (
           <Button variant="secondary" onClick={handleReset}>
             <RotateCcw className="w-4 h-4 mr-2" />
-            重置
+            {t("common.reset")}
           </Button>
         )}
         {remaining === 0 ? (
           <Button variant="default" onClick={handleReset}>
             <RotateCcw className="w-4 h-4 mr-2" />
-            重置
+            {t("common.reset")}
           </Button>
         ) : isRunning ? (
           <Button variant="destructive" onClick={handlePause}>
             <Pause className="w-4 h-4 mr-2" />
-            暂停
+            {t("common.pause")}
           </Button>
         ) : (
           <Button variant="default" onClick={handleStart}>
             <Play className="w-4 h-4 mr-2" />
-            开始
+            {t("common.start")}
           </Button>
         )}
       </div>
@@ -280,9 +297,10 @@ function Countdown() {
 }
 
 function Stopwatch() {
-  const [time, setTime] = useState(0);
+  const { t } = useI18n();
+  const [time, setTime] = useLocalStorage("timer-stopwatch-time", 0);
   const [isRunning, setIsRunning] = useState(false);
-  const [laps, setLaps] = useState<number[]>([]);
+  const [laps, setLaps] = useLocalStorage("timer-stopwatch-laps", [] as number[]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -326,11 +344,11 @@ function Stopwatch() {
           className="min-w-24"
         >
           {isRunning ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-          {isRunning ? "暂停" : "开始"}
+          {isRunning ? t("common.pause") : t("common.start")}
         </Button>
         <Button variant="secondary" onClick={handleReset}>
           <RotateCcw className="w-4 h-4 mr-2" />
-          重置
+          {t("common.reset")}
         </Button>
         {isRunning && (
           <Button variant="outline" onClick={handleLap}>
@@ -365,9 +383,10 @@ function Stopwatch() {
 }
 
 export default function TimerPage() {
+  const { t, language } = useI18n();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [displayMode, setDisplayMode] = useState<DisplayMode>("digital");
-  const [toolMode, setToolMode] = useState<ToolMode>("clock");
+  const [displayMode, setDisplayMode] = useLocalStorage<DisplayMode>("timer-display-mode", "digital");
+  const [toolMode, setToolMode] = useLocalStorage<ToolMode>("timer-tool-mode", "clock");
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -385,7 +404,7 @@ export default function TimerPage() {
             transition={{ duration: 0.6 }}
             className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
           >
-            计时器工具
+            {t("timer.title")}
           </motion.h1>
 
           <motion.p
@@ -394,7 +413,7 @@ export default function TimerPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-base md:text-lg text-muted-foreground mb-6"
           >
-          实时时钟、倒计时与秒表功能，随时掌握时间
+            {t("timer.realTime")}
           </motion.p>
 
           <motion.div
@@ -405,12 +424,12 @@ export default function TimerPage() {
           >
             {features.map((feature, index) => (
               <motion.div
-                key={feature.text}
+                key={feature.textKey}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
               >
-                <FeatureTag icon={feature.icon} text={feature.text} />
+                <FeatureTag icon={feature.icon} text={t(feature.textKey)} />
               </motion.div>
             ))}
           </motion.div>
@@ -431,21 +450,21 @@ export default function TimerPage() {
             onClick={() => setToolMode("clock")}
             className="min-w-20"
           >
-            时钟
+            {t("timer.clock")}
           </Button>
           <Button
             variant={toolMode === "countdown" ? "default" : "secondary"}
             onClick={() => setToolMode("countdown")}
             className="min-w-20"
           >
-            倒计时
+            {t("timer.countdown")}
           </Button>
           <Button
             variant={toolMode === "stopwatch" ? "default" : "secondary"}
             onClick={() => setToolMode("stopwatch")}
             className="min-w-20"
           >
-            秒表
+            {t("timer.stopwatch")}
           </Button>
         </motion.div>
 
@@ -493,14 +512,14 @@ export default function TimerPage() {
                 size="sm"
                 onClick={() => setDisplayMode("digital")}
               >
-                电子钟
+                {t("timer.digital")}
               </Button>
               <Button
                 variant={displayMode === "analog" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setDisplayMode("analog")}
               >
-                模拟钟
+                {t("timer.analog")}
               </Button>
             </motion.div>
 
@@ -510,7 +529,7 @@ export default function TimerPage() {
               transition={{ duration: 0.5, delay: 0.25 }}
               className="text-base md:text-lg text-muted-foreground text-center"
             >
-              {currentTime.toLocaleDateString("zh-CN", {
+              {currentTime.toLocaleDateString(language === "zh" ? "zh-CN" : "en-US", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
