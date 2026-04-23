@@ -5,5 +5,4 @@ compatibility_flags = ["nodejs_compat"]
 [build]
 command = "npx @cloudflare/next-on-pages@1"
 
-[site]
-bucket = ".vercel/output/static"
+main = ".vercel/output/static/_worker.js/index.js"
