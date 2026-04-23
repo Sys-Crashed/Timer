@@ -1,5 +1,0 @@
-# Cloudflare Pages Configuration
-# Deployment: Cloudflare Pages (not Workers)
-
-[build]
-command = "pnpm run build"
