@@ -5,4 +5,5 @@ compatibility_flags = ["nodejs_compat"]
 [build]
 command = "npx @cloudflare/next-on-pages@1"
 
-main = ".vercel/output/static/_worker.js/index.js"
+[assets]
+directory = ".vercel/output/static"
