@@ -4,7 +4,7 @@ compatibility_flags = ["nodejs_compat"]
 main = ".vercel/output/static/_worker.js/index.js"
 
 [build]
-command = "npx @cloudflare/next-on-pages@1"
+command = "npx @cloudflare/next-on-pages@1 && echo '_worker.js' > .vercel/output/static/.assetsignore"
 
 [assets]
 directory = ".vercel/output/static"
