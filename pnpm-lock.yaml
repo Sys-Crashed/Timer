@@ -54,6 +54,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.20
         version: 10.5.0(postcss@8.5.10)
+      opennextjs-cloudflare:
+        specifier: ^1.0.0
+        version: 1.0.0
       postcss:
         specifier: ^8.4.49
         version: 8.5.10
@@ -919,6 +922,9 @@ packages:
   node-releases@2.0.38:
     resolution: {integrity: sha512-3qT/88Y3FbH/Kx4szpQQ4HzUbVrHPKTLVpVocKiLfoYvw9XSGOX2FmD2d6DrXbVYyAQTF2HeF6My8jmzx7/CRw==}
 
+  opennextjs-cloudflare@1.0.0:
+    resolution: {integrity: sha512-udcoJaxZyMUp+uYt5Lumz0b+uuCsbnQP8jG7kexZltHaO9ANxfPBhrju4MzkrUPUb3ePox9nQ7Bo2e9Wbeux9g==}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -1740,6 +1746,8 @@ snapshots:
       - babel-plugin-macros
 
   node-releases@2.0.38: {}
+
+  opennextjs-cloudflare@1.0.0: {}
 
   picocolors@1.1.1: {}
 
