@@ -1,0 +1,6 @@
+# Cloudflare Pages Configuration
+# https://developers.cloudflare.com/pages/framework-guides/deploy-a-next-js-site/
+
+[build]
+command = "npx @cloudflare/next-on-pages@1"
+output_directory = ".vercel/output/static"
